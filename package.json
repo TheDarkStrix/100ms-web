@@ -43,6 +43,7 @@
     "firebase": "^8.0.0",
     "formik": "^2.1.7",
     "mdi-react": "^6.4.0",
+    "rc-input-number": "^7.0.2",
     "react": "^16.13.1",
     "react-container-dimensions": "^1.4.1",
     "react-dom": "^16.13.1",
