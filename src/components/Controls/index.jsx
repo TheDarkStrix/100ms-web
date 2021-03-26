@@ -5,6 +5,8 @@ import VideocamOffIcon from 'mdi-react/VideocamOffIcon';
 import MicrophoneIcon from 'mdi-react/MicrophoneIcon';
 import MicrophoneOffIcon from 'mdi-react/MicrophoneOffIcon';
 import PhoneHangupIcon from 'mdi-react/PhoneHangupIcon';
+import HandLeftIcon from 'mdi-react/HandLeftIcon';
+import PollIcon from 'mdi-react/PollIcon';
 import TelevisionIcon from 'mdi-react/TelevisionIcon';
 import TelevisionOffIcon from 'mdi-react/TelevisionOffIcon';
 import VideoCheckIcon from 'mdi-react/VideoCheckIcon';
@@ -34,6 +36,28 @@ const Controls = ({
           label="Camera"
           isActive={!isCameraOn}
           onClick={onCamToggle}
+        />
+      </div>
+      <div className="mx-1">
+        <ControlButton
+          icon={<HandLeftIcon className="text-indigo-100" />}
+          activeIcon={<HandLeftIcon className="text-red-100" />}
+          label="Raise"
+          // isActive={isMuted}
+          onClick={() => {
+            console.log('raise icon clicked');
+          }}
+        />
+      </div>
+      <div className="mx-1">
+        <ControlButton
+          icon={<PollIcon className="text-indigo-100" />}
+          activeIcon={<PollIcon className="text-red-100" />}
+          label="Poll"
+          // isActive={isMuted}
+          onClick={() => {
+            console.log('poll icon clicked');
+          }}
         />
       </div>
       <div className="mx-1">
