@@ -28,8 +28,16 @@ class Conference extends React.Component {
     };
   }
 
+  checkForHost = data => {
+    console.log('__DATA__', data);
+    if (data.role === 'Host') {
+      this.setState({ isHost: true });
+    }
+  };
+
   componentDidMount = () => {
     const { client } = this.props;
+    console.log('=====' + this.props.isHost + ' ===========');
     client.on('stream-add', this._handleAddStream);
     client.on('stream-remove', this._handleRemoveStream);
     this.roomStateUnsubscribe = onRoomStateChange(
@@ -370,6 +378,8 @@ class Conference extends React.Component {
           />
         )}
         <Controls
+          onHandRaised={this.props.onHandRaised}
+          isHost={this.props.isHost}
           isMuted={this.state.audioMuted}
           isCameraOn={!this.state.videoMuted}
           isScreenSharing={this.props.isScreenSharing}

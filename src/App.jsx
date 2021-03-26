@@ -38,6 +38,7 @@ class App extends React.Component {
     this.isConnected = false;
     this.state = {
       login: false,
+      isHost: false,
       loading: false,
       localAudioEnabled: true,
       localVideoEnabled: true,
@@ -47,6 +48,7 @@ class App extends React.Component {
       vidFit: false,
       loginInfo: {},
       messages: [],
+      allpeers: [],
     };
 
     this._settings = {
@@ -90,7 +92,9 @@ class App extends React.Component {
       env,
       room_id: roomId,
       user_name: userName,
-      role,
+      // set the role to host
+      // person creating the meeting is the HOST
+      role: 'Host',
     });
 
     console.log(`%c[APP] TOKEN IS: ${authToken}`, 'color: orange');
@@ -102,6 +106,9 @@ class App extends React.Component {
         endpoint: url,
       });
 
+      this.state.allpeers.push(peer);
+      console.log('pushed host peer to all peers', peer);
+      if (role === 'Host') this.setState({ isHost: true });
       return new HMSClient(peer, config);
     } catch (err) {
       console.error('ERROR: ', err);
@@ -143,6 +150,8 @@ class App extends React.Component {
     };
 
     client.on('peer-join', (room, peer) => {
+      this.state.allpeers.push(peer);
+      console.log('NEW PEER JOINED', peer);
       this._notification('Peer Join', `peer => ${peer.name} joined ${room}!`);
     });
 
@@ -352,17 +361,26 @@ class App extends React.Component {
 
   _onMessageReceived = (from, message) => {
     console.log('Received message:' + from + ':' + message);
-    let messages = this.state.messages;
-    let uid = 1;
-    messages.push(new Message({ id: uid, message: message, senderName: from }));
-    this.setState({ messages });
+    const messageData = message.split(':');
+    switch (messageData[0]) {
+      case 'msg':
+        let messages = this.state.messages;
+        let uid = 1;
+        messages.push(
+          new Message({ id: uid, message: message, senderName: from })
+        );
+        this.setState({ messages });
+        break;
+      case 'handRaise':
+        if (this.state.isHost) this._notification('Hand Raised by ' + from);
+    }
   };
 
   _onSendMessage = data => {
     console.log('Send message:' + data);
     var info = {
       senderName: this.state.loginInfo.displayName,
-      msg: data,
+      msg: 'msg:' + data,
     };
     this.client.broadcast(info, this.client.rid);
     let messages = this.state.messages;
@@ -370,6 +388,18 @@ class App extends React.Component {
     messages.push(new Message({ id: uid, message: data, senderName: 'me' }));
     this.setState({ messages });
   };
+
+  _onRaiseHand = data => {
+    console.log('Raise Hand' + data);
+    var info = {
+      senderName: this.state.loginInfo.displayName,
+      msg: 'handRaise:',
+    };
+    this.client.broadcast(info, this.client.rid);
+    //this.setState({ messages });
+  };
+
+  _onCreatePoll = () => {};
 
   render() {
     const {
@@ -431,6 +461,7 @@ class App extends React.Component {
                     <Conference
                       roomName={this.roomName}
                       roomId={this.roomId}
+                      isHost={this.state.isHost}
                       collapsed={this.state.collapsed}
                       client={this.client}
                       settings={this._settings}
@@ -438,6 +469,7 @@ class App extends React.Component {
                       localVideoEnabled={localVideoEnabled}
                       vidFit={vidFit}
                       loginInfo={this.state.loginInfo}
+                      onHandRaised={this._onRaiseHand}
                       ref={ref => {
                         this.conference = ref;
                       }}

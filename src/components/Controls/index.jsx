@@ -13,6 +13,7 @@ import VideoCheckIcon from 'mdi-react/VideoCheckIcon';
 import ToolShare from '../../ToolShare';
 
 const Controls = ({
+  onHandRaised,
   isMuted,
   isScreenSharing,
   isCameraOn,
@@ -23,6 +24,7 @@ const Controls = ({
   onLeave,
   onChatToggle,
   loginInfo,
+  isHost,
 }) => {
   return (
     <div
@@ -38,28 +40,34 @@ const Controls = ({
           onClick={onCamToggle}
         />
       </div>
-      <div className="mx-1">
-        <ControlButton
-          icon={<HandLeftIcon className="text-indigo-100" />}
-          activeIcon={<HandLeftIcon className="text-red-100" />}
-          label="Raise"
-          // isActive={isMuted}
-          onClick={() => {
-            console.log('raise icon clicked');
-          }}
-        />
-      </div>
-      <div className="mx-1">
-        <ControlButton
-          icon={<PollIcon className="text-indigo-100" />}
-          activeIcon={<PollIcon className="text-red-100" />}
-          label="Poll"
-          // isActive={isMuted}
-          onClick={() => {
-            console.log('poll icon clicked');
-          }}
-        />
-      </div>
+      {!isHost ? (
+        <div className="mx-1">
+          <ControlButton
+            icon={<HandLeftIcon className="text-indigo-100" />}
+            activeIcon={<HandLeftIcon className="text-red-100" />}
+            label="Raise"
+            // isActive={isMuted}
+            onClick={onHandRaised}
+          />
+        </div>
+      ) : (
+        ''
+      )}
+      {isHost ? (
+        <div className="mx-1">
+          <ControlButton
+            icon={<PollIcon className="text-indigo-100" />}
+            activeIcon={<PollIcon className="text-red-100" />}
+            label="Poll"
+            // isActive={isMuted}
+            onClick={() => {
+              console.log('poll icon clicked');
+            }}
+          />
+        </div>
+      ) : (
+        ''
+      )}
       <div className="mx-1">
         <ControlButton
           icon={<MicrophoneIcon className="text-indigo-100" />}
