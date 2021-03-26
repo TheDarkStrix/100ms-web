@@ -13,6 +13,7 @@ import VideoCheckIcon from 'mdi-react/VideoCheckIcon';
 import ToolShare from '../../ToolShare';
 
 const Controls = ({
+  createPoll,
   onHandRaised,
   isMuted,
   isScreenSharing,
@@ -60,9 +61,7 @@ const Controls = ({
             activeIcon={<PollIcon className="text-red-100" />}
             label="Poll"
             // isActive={isMuted}
-            onClick={() => {
-              console.log('poll icon clicked');
-            }}
+            onClick={createPoll}
           />
         </div>
       ) : (

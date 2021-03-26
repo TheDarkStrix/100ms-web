@@ -378,6 +378,7 @@ class Conference extends React.Component {
           />
         )}
         <Controls
+          createPoll={this.props.createPoll}
           onHandRaised={this.props.onHandRaised}
           isHost={this.props.isHost}
           isMuted={this.state.audioMuted}

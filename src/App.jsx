@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Modal, notification, Spin } from 'antd';
+import { Layout, Modal, notification, Spin, Button, Input } from 'antd';
 const { confirm } = Modal;
 const { Header, Content, Sider } = Layout;
 import { reactLocalStorage } from 'reactjs-localstorage';
@@ -32,11 +32,16 @@ async function getToken({ room_id, user_name, role = 'guest', env }) {
 }
 
 class App extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.client = null;
     this.isConnected = false;
     this.state = {
+      pollResult: [[], []],
+      pollData: '',
+      pollOpen: false,
+      isCreatePollVisible: false,
+      isPollVisible: false,
       login: false,
       isHost: false,
       loading: false,
@@ -373,7 +378,30 @@ class App extends React.Component {
         break;
       case 'handRaise':
         if (this.state.isHost) this._notification('Hand Raised by ' + from);
+        break;
+      case 'pollCreate':
+        console.log('poll created');
+        console.log(message);
+        this.setState({ pollData: message });
+        this.setState({ isPollVisible: true });
+        break;
+      case 'pollVote':
+        const data = message.split(':');
+        console.log(data);
+        let currentResult = this.state.pollResult;
+        currentResult[parseInt(data[1])].push(from);
+        console.log('currentResult', currentResult);
+        this.setState({ pollResult: currentResult });
     }
+  };
+
+  _onPollVote = answer => {
+    var info = {
+      senderName: this.state.loginInfo.displayName,
+      msg: 'pollVote:' + answer,
+    };
+    this.setState({ isPollVisible: false });
+    this.client.broadcast(info, this.client.rid);
   };
 
   _onSendMessage = data => {
@@ -389,6 +417,19 @@ class App extends React.Component {
     this.setState({ messages });
   };
 
+  _onCreatePoll = data => {
+    console.log('Poll Create' + data);
+    let pollData = 'pollCreate:' + data.question;
+    data.answers.forEach(element => {
+      pollData += ':' + element;
+    });
+    var info = {
+      senderName: this.state.loginInfo.displayName,
+      msg: pollData,
+    };
+    this.client.broadcast(info, this.client.rid);
+  };
+
   _onRaiseHand = data => {
     console.log('Raise Hand' + data);
     var info = {
@@ -399,7 +440,53 @@ class App extends React.Component {
     //this.setState({ messages });
   };
 
-  _onCreatePoll = () => {};
+  _handleSubmitCreatePoll = event => {
+    event.preventDefault();
+    this.setState({ pollOpen: true });
+    console.log(
+      'handleFORM',
+      this.state.question,
+      this.state.answer1,
+      this.state.answer2
+    );
+    this._onCreatePoll({
+      question: this.state.question,
+      answers: [this.state.answer1, this.state.answer2],
+    });
+    //dont close the poll
+    //    this.setState({ isCreatePollVisible: false });
+    this._notification('Poll Published');
+  };
+
+  _createPoll = () => {
+    this.setState({
+      isCreatePollVisible: !this.state.isCreatePollVisible,
+    });
+  };
+
+  handleQuestion = e => {
+    this.setState({ question: e.target.value });
+  };
+
+  handleAnswer1 = e => {
+    this.setState({ answer1: e.target.value });
+  };
+
+  handleAnswer2 = e => {
+    this.setState({ answer2: e.target.value });
+  };
+
+  _closeCreatedPoll = () => {
+    this.setState({
+      pollOpen: !this.state.pollOpen,
+      isCreatePollVisible: !this.state.isCreatePollVisible,
+      question: '',
+      answer1: '',
+      answer2: '',
+      pollResult: [[], []],
+      pollData: '',
+    });
+  };
 
   render() {
     const {
@@ -459,6 +546,7 @@ class App extends React.Component {
                 <Content style={{ flex: 1, position: 'relative' }}>
                   <div>
                     <Conference
+                      createPoll={this._createPoll}
                       roomName={this.roomName}
                       roomId={this.roomId}
                       isHost={this.state.isHost}
@@ -498,6 +586,79 @@ class App extends React.Component {
               />
             </div>
           )}
+          <Modal
+            visible={this.state.isPollVisible}
+            title={'Poll'}
+            footer={[
+              <Button
+                key="submit"
+                type="primary"
+                onClick={() =>
+                  this.setState({ isPollVisible: !this.state.isPollVisible })
+                }
+              >
+                Close Poll
+              </Button>,
+            ]}
+          >
+            <div>Question : {this.state.pollData.split(':')[1]}</div>
+            <Button
+              type="primary"
+              style={{ margin: '1em 1em 1em  0' }}
+              onClick={() => this._onPollVote(0)}
+            >
+              {this.state.pollData.split(':')[2]}
+            </Button>
+            <Button type="primary" onClick={() => this._onPollVote(1)}>
+              {this.state.pollData.split(':')[3]}
+            </Button>
+          </Modal>
+          {/* create poll */}
+          <Modal
+            visible={this.state.isCreatePollVisible}
+            title={'Create Poll'}
+            footer={[
+              <Button
+                key="submit"
+                type="primary"
+                onClick={
+                  !this.state.pollOpen
+                    ? this._handleSubmitCreatePoll
+                    : this._closeCreatedPoll
+                }
+              >
+                {!this.state.pollOpen ? 'Create Poll' : 'Close Poll'}
+              </Button>,
+            ]}
+          >
+            <Input
+              placeholder="Enter question"
+              type="text"
+              style={{ margin: '1em 0' }}
+              value={this.state.question}
+              onChange={this.handleQuestion}
+            />
+            <Input
+              placeholder="Answer 1"
+              style={{ margin: '1em 0' }}
+              type="text"
+              value={this.state.answer1}
+              onChange={this.handleAnswer1}
+            />
+            <Input
+              placeholder="Answer 2"
+              style={{ margin: '1em 0' }}
+              type="text"
+              value={this.state.answer2}
+              onChange={this.handleAnswer2}
+            />
+            <div>
+              Results : <br />
+              Answer 1 : {this.state.pollResult[0].length}
+              <br />
+              Answer 2 : {this.state.pollResult[1].length}
+            </div>
+          </Modal>
         </Content>
       </Layout>
     );
